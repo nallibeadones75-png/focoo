@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOCO — Academic OS & Intelligent Organizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+        colors: {
+          brand: { 
+            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 
+            500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 900: '#312e81', 950: '#1e1b4b' 
+          }
+        },
+        animation: {
+          'fade-in': 'fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          'slide-up': 'slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          'scale-in': 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        },
+        keyframes: {
+          fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+          slideUp: { '0%': { opacity: '0', transform: 'translateY(14px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+          scaleIn: { '0%': { opacity: '0', transform: 'scale(0.96)' }, '100%': { opacity: '1', transform: 'scale(1)' } }
+        }
+      }
+    }
+  }
+</script>
+<style>
+  body { background-color: #f6f8fb; color: #0f172a; font-family: 'Plus Jakarta Sans', sans-serif; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.05);
+  }
+  
+  .hero-gradient {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #4338ca 100%);
+  }
+
+  .stagger-1 { animation-delay: 30ms; }
+  .stagger-2 { animation-delay: 60ms; }
+  .stagger-3 { animation-delay: 90ms; }
+  .stagger-4 { animation-delay: 120ms; }
+</style>
+</head>
+<body class="min-h-full flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+<header class="hero-gradient text-white pb-32 pt-8 px-4 sm:px-8 relative overflow-hidden shadow-2xl rounded-b-[3rem]">
+  <div class="absolute inset-0 opacity-15 pointer-events-none overflow-hidden">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-brand-400 rounded-full blur-[100px]"></div>
+    <div class="absolute top-10 right-0 w-96 h-96 bg-indigo-300 rounded-full blur-[120px]"></div>
+  </div>
+
+  <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
+    <div class="flex items-center gap-4">
+      <div class="w-13 h-13 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-xl flex items-center justify-center shadow-inner">
+        <svg class="w-7 h-7 text-indigo-200 animate-pulse-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+      </div>
+      <div>
+        <div class="flex items-center gap-2.5">
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">FOCO</h1>
+          <span class="bg-white/15 text-indigo-100 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-white/10 uppercase tracking-widest backdrop-blur-md">Pro OS</span>
+        </div>
+        <p class="text-indigo-200 text-sm font-medium mt-0.5">Tu rendimiento académico, optimizado y sin fricción.</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 self-stretch md:self-auto justify-between md:justify-end">
+      <div class="bg-black/25 backdrop-blur-xl px-4 py-2.5 rounded-2xl border border-white/10 flex items-center gap-2.5 text-xs sm:text-sm font-semibold text-indigo-100 shadow-inner">
+        <svg class="w-4 h-4 text-indigo-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        <span id="today-text"></span>
+      </div>
+
+      <button onclick="openPomodoro()" class="bg-white/15 hover:bg-white/25 text-white font-semibold px-4.5 py-2.5 rounded-2xl border border-white/20 backdrop-blur-xl transition-all flex items-center gap-2 text-xs sm:text-sm active:scale-95 shadow-lg group">
+        <svg class="w-4 h-4 text-amber-300 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>Modo Enfoque</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 sm:px-6 -mt-20 relative z-20 pb-28 flex-1 w-full">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    
+    <!-- Stat 1 -->
+    <div class="glass-panel rounded-3xl p-5 shadow-sm animate-slide-up stagger-1 border border-slate-200/80 flex flex-col justify-between hover:border-slate-300 transition-all">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Pendientes</span>
+        <div class="w-9 h-9 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold shadow-sm">
+          <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span id="stat-pending" class="text-3xl font-black text-slate-900 tracking-tight">0</span>
+        <span class="text-xs text-slate-400 font-semibold">actividades</span>
+      </div>
+    </div>
+
+    <!-- Stat 2 -->
+    <div class="glass-panel rounded-3xl p-5 shadow-sm animate-slide-up stagger-2 border border-slate-200/80 flex flex-col justify-between hover:border-slate-300 transition-all">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Esta Semana</span>
+        <div class="w-9 h-9 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shadow-sm">
+          <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        </div>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span id="stat-week" class="text-3xl font-black text-slate-900 tracking-tight">0</span>
+        <span class="text-xs text-slate-400 font-semibold">próximos 7 días</span>
+      </div>
+    </div>
+
+    <!-- Stat 3 -->
+    <div class="glass-panel rounded-3xl p-5 shadow-sm animate-slide-up stagger-3 border border-slate-200/80 flex flex-col justify-between hover:border-slate-300 transition-all">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Completadas</span>
+        <div class="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shadow-sm">
+          <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span id="stat-done" class="text-3xl font-black text-slate-900 tracking-tight">0</span>
+        <span class="text-xs text-slate-400 font-semibold">listas</span>
+      </div>
+    </div>
+
+    <!-- Stat 4 -->
+    <div class="glass-panel rounded-3xl p-5 shadow-sm animate-slide-up stagger-4 border border-slate-200/80 flex flex-col justify-between hover:border-slate-300 transition-all">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Progreso Global</span>
+        <span id="stat-pct" class="text-xs font-extrabold text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full border border-brand-100">0%</span>
+      </div>
+      <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden mt-2 p-0.5 border border-slate-200/50">
+        <div id="progress-bar" class="bg-brand-600 h-full rounded-full transition-all duration-700 ease-out shadow-sm" style="width: 0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    
+    <!-- Left Column: Form Section -->
+    <div class="lg:col-span-4 sticky top-6">
+      <div class="glass-panel rounded-3xl p-6.5 shadow-xl border border-slate-200/90">
+        <div class="flex items-center justify-between mb-5 pb-3 border-b border-slate-100">
+          <h2 id="form-title" class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+            <svg id="form-icon" class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+            Nueva Actividad
+          </h2>
+          <button id="cancel-edit-btn" onclick="resetForm()" class="hidden text-xs font-bold text-slate-400 hover:text-rose-600 transition-colors bg-slate-100 hover:bg-rose-50 px-2.5 py-1 rounded-lg">Cancelar</button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Nombre de la actividad</label>
+            <input id="f-name" class="w-full px-4 py-3 bg-slate-50/80 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all outline-none text-slate-800 placeholder-slate-400 font-semibold text-sm shadow-inner" placeholder="Ej. Ensayo final arquitectura">
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Asignatura / Ramo</label>
+            <input id="f-subject" list="subject-suggestions" class="w-full px-4 py-3 bg-slate-50/80 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all outline-none text-slate-800 placeholder-slate-400 font-semibold text-sm shadow-inner" placeholder="Ej. Taller de Interacción">
+            <datalist id="subject-suggestions"></datalist>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Fecha límite</label>
+              <input id="f-date" type="date" class="w-full px-3 py-3 bg-slate-50/80 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all outline-none text-slate-800 font-semibold text-xs sm:text-sm shadow-inner">
+            </div>
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Tipo</label>
+              <select id="f-type" class="w-full px-3 py-3 bg-slate-50/80 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all outline-none text-slate-800 font-semibold text-xs sm:text-sm cursor-pointer shadow-inner">
+                <option>Entrega</option>
+                <option>Prueba</option>
+                <option>Presentación</option>
+                <option>Trabajo</option>
+                <option>Otro</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Nivel de Prioridad</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" onclick="setPriority('Alta')" id="p-alta" class="priority-btn py-2.5 px-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all">Alta 🔥</button>
+              <button type="button" onclick="setPriority('Media')" id="p-media" class="priority-btn py-2.5 px-2 rounded-xl border border-brand-500 text-xs font-bold text-brand-700 bg-brand-50 transition-all shadow-sm">Media</button>
+              <button type="button" onclick="setPriority('Baja')" id="p-baja" class="priority-btn py-2.5 px-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all">Baja 🟢</button>
+            </div>
+          </div>
+        </div>
+
+        <button id="submit-btn" onclick="saveTask()" class="w-full mt-6 bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-lg shadow-brand-500/25 active:scale-[0.98] flex items-center justify-center gap-2 text-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+          Agregar a FOCO
+        </button>
+
+        <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-semibold">
+          <span>Almacenamiento seguro local</span>
+          <span class="flex items-center gap-1.5 text-emerald-600 font-bold"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sincronizado</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="lg:col-span-8 flex flex-col gap-5">
+      
+      <!-- Toolbar -->
+      <div class="glass-panel rounded-2xl p-3 shadow-sm border border-slate-200/90 flex flex-col sm:flex-row gap-3 items-center justify-between">
+        <div class="relative w-full sm:w-72">
+          <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </span>
+          <input id="search-input" oninput="render()" class="w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:bg-white text-xs sm:text-sm outline-none font-semibold placeholder-slate-400 transition-all shadow-inner" placeholder="Buscar por nombre, ramo...">
+        </div>
+
+        <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+          <select id="filter-select" onchange="render()" class="px-3.5 py-2 bg-slate-50/80 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-700 outline-none cursor-pointer hover:bg-slate-100 transition-all shadow-sm">
+            <option value="pending">Solo pendientes</option>
+            <option value="all">Todas</option>
+            <option value="done">Completadas</option>
+          </select>
+          <select id="sort-select" onchange="render()" class="px-3.5 py-2 bg-slate-50/80 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-700 outline-none cursor-pointer hover:bg-slate-100 transition-all shadow-sm">
+            <option value="priority">Prioridad + Fecha</option>
+            <option value="date">Fecha más próxima</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Subject Filter Quick Chips -->
+      <div id="subject-chips" class="flex flex-wrap gap-2 items-center">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Activity List Container -->
+      <div id="task-list" class="space-y-3.5">
+        <!-- Rendered dynamically -->
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<!-- Custom Modal for Delete Confirmation -->
+<div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md hidden animate-fade-in">
+  <div class="glass-panel rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 animate-scale-in text-center">
+    <div class="w-13 h-13 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 font-bold shadow-inner">
+      <svg class="w-6.5 h-6.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+    </div>
+    <h3 class="text-lg font-extrabold text-slate-900 mb-1">¿Eliminar actividad?</h3>
+    <p class="text-xs text-slate-500 mb-6 leading-relaxed">Esta acción es permanente y se borrará de tu registro semestral.</p>
+    <div class="grid grid-cols-2 gap-3">
+      <button onclick="closeDeleteModal()" class="py-3 px-4 rounded-xl font-bold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">Cancelar</button>
+      <button id="confirm-delete-btn" class="py-3 px-4 rounded-xl font-bold text-xs bg-rose-600 text-white hover:bg-rose-700 transition-all shadow-lg shadow-rose-500/25">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pomodoro Focus Modal -->
+<div id="pomodoro-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md hidden animate-fade-in">
+  <div class="glass-panel rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-200/90 animate-scale-in text-center relative overflow-hidden">
+    <button onclick="closePomodoro()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 transition-all">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+    
+    <div class="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 font-extrabold px-3.5 py-1.5 rounded-full text-xs mb-6 border border-indigo-100 shadow-sm">
+      <span class="w-2 h-2 rounded-full bg-indigo-600 animate-ping"></span>
+      Modo Enfoque / Pomodoro
+    </div>
+
+    <div id="pomodoro-display" class="text-6xl font-black text-slate-900 tracking-tighter mb-8 font-mono">25:00</div>
+
+    <div class="flex items-center justify-center gap-3 mb-6">
+      <button id="pomo-toggle-btn" onclick="togglePomodoroTimer()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 px-8 rounded-2xl shadow-lg shadow-brand-500/30 transition-all active:scale-95 text-sm">Iniciar</button>
+      <button onclick="resetPomodoroTimer()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 px-6 rounded-2xl transition-all text-sm">Reiniciar</button>
+    </div>
+
+    <p class="text-xs text-slate-400 font-medium">Mantén tu atención en una sola tarea académica para maximizar tu rendimiento.</p>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+<script>
+let tasks = JSON.parse(localStorage.getItem('focoTasks_v5') || localStorage.getItem('focoTasks_v4') || localStorage.getItem('focoTasks_v2') || localStorage.getItem('focoTasks') || '[]');
+tasks = tasks.map(t => ({
+  ...t,
+  subject: t.subject || 'General',
+  priority: t.priority || 'Media'
+}));
+
+let currentPriority = 'Media';
+let editingId = null;
+let taskToDelete = null;
+let activeSubjectFilter = 'all';
+
+let pomoTimer = null;
+let pomoSeconds = 25 * 60;
+let pomoRunning = false;
+
+const today = new Date();
+today.setHours(0,0,0,0);
+
+document.getElementById('today-text').textContent = today.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'short' });
+
+function save() {
+  localStorage.setItem('focoTasks_v5', JSON.stringify(tasks));
+}
+
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  const bgColors = type === 'success' ? 'bg-slate-900 text-white border-slate-800' : 'bg-rose-600 text-white border-rose-500';
+  
+  toast.className = `${bgColors} px-4.5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-3 pointer-events-auto animate-slide-up border`;
+  toast.innerHTML = `
+    <svg class="w-4.5 h-4.5 ${type === 'success' ? 'text-emerald-400' : 'text-white'} shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+    <span>${message}</span>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(12px)';
+    toast.style.transition = 'all 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+function setPriority(p) {
+  currentPriority = p;
+  document.querySelectorAll('.priority-btn').forEach(btn => {
+    btn.className = "priority-btn py-2.5 px-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 bg-slate-50 transition-all";
+  });
+  const activeBtn = document.getElementById(`p-${p.toLowerCase()}`);
+  if (activeBtn) {
+    if (p === 'Alta') activeBtn.className = "priority-btn py-2.5 px-2 rounded-xl border border-rose-500 text-xs font-bold text-rose-700 bg-rose-50 transition-all shadow-sm";
+    if (p === 'Media') activeBtn.className = "priority-btn py-2.5 px-2 rounded-xl border border-brand-500 text-xs font-bold text-brand-700 bg-brand-50 transition-all shadow-sm";
+    if (p === 'Baja') activeBtn.className = "priority-btn py-2.5 px-2 rounded-xl border border-emerald-500 text-xs font-bold text-emerald-700 bg-emerald-50 transition-all shadow-sm";
+  }
+}
+
+function saveTask() {
+  const name = document.getElementById('f-name').value.trim();
+  const subject = document.getElementById('f-subject').value.trim() || 'General';
+  const date = document.getElementById('f-date').value;
+  const type = document.getElementById('f-type').value;
+
+  if (!name || !date) {
+    showToast('Por favor completa el nombre y la fecha límite.', 'error');
+    return;
+  }
+
+  if (editingId) {
+    const t = tasks.find(x => x.id === editingId);
+    if (t) {
+      t.name = name;
+      t.subject = subject;
+      t.date = date;
+      t.type = type;
+      t.priority = currentPriority;
+    }
+    showToast('Actividad actualizada correctamente');
+    resetForm();
+  } else {
+    tasks.push({
+      id: Date.now(),
+      name,
+      subject,
+      date,
+      type,
+      priority: currentPriority,
+      done: false
+    });
+    showToast('¡Nueva actividad agregada con éxito!');
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-date').value = '';
+  }
+
+  save();
+  render();
+}
+
+function editTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+
+  document.getElementById('f-name').value = t.name;
+  document.getElementById('f-subject').value = t.subject;
+  document.getElementById('f-date').value = t.date;
+  document.getElementById('f-type').value = t.type;
+  setPriority(t.priority);
+
+  editingId = id;
+  document.getElementById('form-title').innerHTML = `<svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Editar Actividad`;
+  document.getElementById('submit-btn').innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg> Guardar Cambios`;
+  document.getElementById('submit-btn').className = "w-full mt-6 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-lg shadow-amber-500/25 active:scale-[0.98] flex items-center justify-center gap-2 text-sm";
+  document.getElementById('cancel-edit-btn').classList.remove('hidden');
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetForm() {
+  editingId = null;
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-subject').value = '';
+  document.getElementById('f-date').value = '';
+  setPriority('Media');
+  document.getElementById('form-title').innerHTML = `<svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg> Nueva Actividad`;
+  document.getElementById('submit-btn').innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg> Agregar a FOCO`;
+  document.getElementById('submit-btn').className = "w-full mt-6 bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-lg shadow-brand-500/25 active:scale-[0.98] flex items-center justify-center gap-2 text-sm";
+  document.getElementById('cancel-edit-btn').classList.add('hidden');
+}
+
+function toggleTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (t) {
+    t.done = !t.done;
+    save();
+    render();
+    if (t.done) showToast('¡Gran trabajo! Actividad completada.');
+  }
+}
+
+function promptDelete(id) {
+  taskToDelete = id;
+  document.getElementById('delete-modal').classList.remove('hidden');
+  document.getElementById('confirm-delete-btn').onclick = () => {
+    tasks = tasks.filter(x => x.id !== taskToDelete);
+    if (editingId === taskToDelete) resetForm();
+    save();
+    render();
+    closeDeleteModal();
+    showToast('Actividad eliminada', 'error');
+  };
+}
+
+function closeDeleteModal() {
+  taskToDelete = null;
+  document.getElementById('delete-modal').classList.add('hidden');
+}
+
+function getUrgencyBadge(dateStr) {
+  const tDate = new Date(dateStr + 'T00:00:00');
+  const diffDays = Math.ceil((tDate - today) / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-100 shadow-xs"><span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>Vencida</span>`;
+  if (diffDays === 0) return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100 shadow-xs"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>Vence hoy</span>`;
+  if (diffDays === 1) return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-xs"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Vence mañana</span>`;
+  return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600">Faltan ${diffDays} días</span>`;
+}
+
+function render() {
+  let arr = [...tasks];
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const f = document.getElementById('filter-select').value;
+  const s = document.getElementById('sort-select').value;
+
+  const subjects = [...new Set(tasks.map(t => t.subject))];
+  document.getElementById('subject-suggestions').innerHTML = subjects.map(sub => `<option value="${sub}">`).join('');
+
+  const chipsContainer = document.getElementById('subject-chips');
+  chipsContainer.innerHTML = `
+    <button onclick="filterBySubject('all')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${activeSubjectFilter === 'all' ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}">Todos los ramos</button>
+    ${subjects.map(sub => `
+      <button onclick="filterBySubject('${sub}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${activeSubjectFilter === sub ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}">${sub}</button>
+    `).join('')}
+  `;
+
+  if (q) arr = arr.filter(t => (t.name + ' ' + t.subject + ' ' + t.type).toLowerCase().includes(q));
+  if (f === 'pending') arr = arr.filter(t => !t.done);
+  if (f === 'done') arr = arr.filter(t => t.done);
+  if (activeSubjectFilter !== 'all') arr = arr.filter(t => t.subject === activeSubjectFilter);
+
+  const rank = { Alta: 0, Media: 1, Baja: 2 };
+  arr.sort((a, b) => {
+    if (s === 'date') return a.date.localeCompare(b.date);
+    const pDiff = rank[a.priority] - rank[b.priority];
+    return pDiff !== 0 ? pDiff : a.date.localeCompare(b.date);
+  });
+
+  const totalItems = tasks.length;
+  const pendingCount = tasks.filter(t => !t.done).length;
+  const doneCount = tasks.filter(t => t.done).length;
+  const endWeek = new Date(today);
+  endWeek.setDate(endWeek.getDate() + 7);
+  const weekCount = tasks.filter(t => !t.done && new Date(t.date + 'T00:00:00') >= today && new Date(t.date + 'T00:00:00') < endWeek).length;
+
+  document.getElementById('stat-pending').textContent = pendingCount;
+  document.getElementById('stat-week').textContent = weekCount;
+  document.getElementById('stat-done').textContent = doneCount;
+  
+  const pct = totalItems === 0 ? 0 : Math.round((doneCount / totalItems) * 100);
+  document.getElementById('stat-pct').textContent = `${pct}%`;
+  document.getElementById('progress-bar').style.width = `${pct}%`;
+
+  const list = document.getElementById('task-list');
+  if (!arr.length) {
+    list.innerHTML = `
+      <div class="glass-panel rounded-3xl p-12 text-center border border-slate-200/80 shadow-sm">
+        <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-4 font-bold shadow-inner">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+        </div>
+        <h3 class="text-base font-extrabold text-slate-800 mb-1">Todo limpio por aquí</h3>
+        <p class="text-xs text-slate-400 max-w-xs mx-auto">No hay actividades que mostrar con estos filtros. ¡Disfruta tu día o agrega una nueva tarea!</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = arr.map((t, idx) => {
+    const priorityColors = {
+      Alta: 'text-rose-600 bg-rose-50 border-rose-100',
+      Media: 'text-amber-600 bg-amber-50 border-amber-100',
+      Baja: 'text-emerald-600 bg-emerald-50 border-emerald-100'
+    };
+
+    return `
+      <div class="glass-panel rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80 transition-all hover:shadow-md hover:border-slate-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${t.done ? 'opacity-60 bg-slate-50/50' : ''} animate-slide-up" style="animation-delay: ${idx * 30}ms;">
+        <div class="flex items-start gap-3.5 flex-1 min-w-0">
+          <label class="relative flex items-center justify-center cursor-pointer mt-1 shrink-0">
+            <input type="checkbox" class="peer sr-only" ${t.done ? 'checked' : ''} onchange="toggleTask(${t.id})">
+            <div class="w-6 h-6 border-2 border-slate-300 rounded-xl flex items-center justify-center bg-white peer-checked:bg-brand-600 peer-checked:border-brand-600 transition-all shadow-xs">
+              <svg class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+          </label>
+
+          <div class="flex-1 min-w-0">
+            <h3 class="text-base font-extrabold text-slate-900 mb-1.5 leading-snug break-words ${t.done ? 'line-through text-slate-500' : ''}">${escapeHtml(t.name)}</h3>
+            
+            <div class="flex flex-wrap items-center gap-2">
+              ${getUrgencyBadge(t.date)}
+              
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 shadow-xs">
+                📚 ${escapeHtml(t.subject)}
+              </span>
+
+              <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold border ${priorityColors[t.priority]} shadow-xs">
+                ${t.priority}
+              </span>
+
+              <span class="text-xs text-slate-400 font-medium">· ${escapeHtml(t.type)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 self-end sm:self-center shrink-0 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 w-full sm:w-auto justify-end">
+          <button onclick="editTask(${t.id})" class="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all" title="Editar">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+          </button>
+          <button onclick="promptDelete(${t.id})" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Eliminar">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2.2 2.2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterBySubject(sub) {
+  activeSubjectFilter = sub;
+  render();
+}
+
+function escapeHtml(str) {
+  return (str || '').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+
+function openPomodoro() {
+  document.getElementById('pomodoro-modal').classList.remove('hidden');
+}
+
+function closePomodoro() {
+  document.getElementById('pomodoro-modal').classList.add('hidden');
+  stopPomodoroTimer();
+}
+
+function togglePomodoroTimer() {
+  const btn = document.getElementById('pomo-toggle-btn');
+  if (pomoRunning) {
+    clearInterval(pomoTimer);
+    pomoRunning = false;
+    btn.textContent = 'Reanudar';
+    btn.className = "bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 px-8 rounded-2xl shadow-lg shadow-brand-500/30 transition-all active:scale-95 text-sm";
+  } else {
+    pomoRunning = true;
+    btn.textContent = 'Pausar';
+    btn.className = "bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 px-8 rounded-2xl shadow-lg shadow-amber-500/30 transition-all active:scale-95 text-sm";
+    pomoTimer = setInterval(() => {
+      if (pomoSeconds > 0) {
+        pomoSeconds--;
+        updatePomodoroDisplay();
+      } else {
+        clearInterval(pomoTimer);
+        pomoRunning = false;
+        showToast('¡Tiempo de enfoque cumplido! Tómate un descanso de 5 minutos.');
+        resetPomodoroTimer();
+      }
+    }, 1000);
+  }
+}
+
+function stopPomodoroTimer() {
+  clearInterval(pomoTimer);
+  pomoRunning = false;
+  document.getElementById('pomo-toggle-btn').textContent = 'Iniciar';
+}
+
+function resetPomodoroTimer() {
+  stopPomodoroTimer();
+  pomoSeconds = 25 * 60;
+  updatePomodoroDisplay();
+}
+
+function updatePomodoroDisplay() {
+  const mins = Math.floor(pomoSeconds / 60).toString().padStart(2, '0');
+  const secs = (pomoSeconds % 60).toString().padStart(2, '0');
+  document.getElementById('pomodoro-display').textContent = `${mins}:${secs}`;
+}
+
+render();
+</script>
+</body>
+</html>
